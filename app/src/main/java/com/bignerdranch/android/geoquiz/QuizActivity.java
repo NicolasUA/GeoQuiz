@@ -16,6 +16,7 @@ public class QuizActivity extends AppCompatActivity {
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
     private static final int REQUEST_CODE_CHEAT = 0;
+    private static final String CHEATER = "cheater";
 
     private Button mTrueButton;
     private Button mFalseButton;
@@ -30,7 +31,7 @@ public class QuizActivity extends AppCompatActivity {
             new Question(R.string.question_asia, true)
     };
     private int mCurrentIndex;
-    private boolean mIsCheater;
+    private boolean[] mIsCheater = new boolean[mQuestionBank.length];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +60,6 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
-                mIsCheater = false;
                 updateQuestion();
             }
         });
@@ -75,6 +75,7 @@ public class QuizActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX);
+            mIsCheater = savedInstanceState.getBooleanArray(CHEATER);
         }
         updateQuestion();
     }
@@ -116,8 +117,8 @@ public class QuizActivity extends AppCompatActivity {
 
     private void checkAnswer(boolean userPressedTrue) {
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
-        int messageResId = 0;
-        if (mIsCheater) {
+        int messageResId;
+        if (mIsCheater[mCurrentIndex]) {
             messageResId = R.string.judgment_toast;
         } else {
             if (userPressedTrue == answerIsTrue) {
@@ -150,12 +151,13 @@ public class QuizActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         Log.i(TAG, "onSaveInstanceState");
         outState.putInt(KEY_INDEX, mCurrentIndex);
+        outState.putBooleanArray(CHEATER, mIsCheater);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if ((requestCode == REQUEST_CODE_CHEAT) && (data != null)) {
-            mIsCheater = CheatActivity.wasAnswerShown(data);
+            mIsCheater[mCurrentIndex] = CheatActivity.wasAnswerShown(data);
         }
     }
 }
